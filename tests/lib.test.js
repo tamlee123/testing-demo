@@ -59,6 +59,6 @@ describe('getProduct', () => {
     it('should return a user object if valid username is passed', () => {
         const result = lib.registerUser('Mosh');
         expect(result).toMatchObject({username: 'Mosh'});
-        expect(result).toBeGreaterThan(0);
+        expect(result.id).toBeGreaterThan(0);
     });
 });

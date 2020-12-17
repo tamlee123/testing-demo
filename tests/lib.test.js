@@ -1,5 +1,6 @@
 const lib = require('../lib');
-
+const db = require('../db');
+const mail = require('../mail');
 describe('absolute', () => {
     it('should return a positive number if input is positive', () => {
         const result = lib.absolute(1);
@@ -56,9 +57,47 @@ describe('getProduct', () => {
         expect(result).toMatchObject({id: 1, price: 10});
     });
 
-    it('should return a user object if valid username is passed', () => {
-        const result = lib.registerUser('Mosh');
-        expect(result).toMatchObject({username: 'Mosh'});
-        expect(result.id).toBeGreaterThan(0);
+    describe('resgisterUser', () => {
+        it('should throw if username is falsy', () => {
+            const args = [null, undefined, NaN, '', 0, false];
+            args.forEach(a => {
+                expect(() => {lib.registerUser(a)}).toThrow();
+            });
+        });
+
+        it('should return a user object if valid username is passed', () => {
+            const result = lib.registerUser('Mosh');
+            expect(result).toMatchObject({username: 'Mosh'});
+            expect(result.id).toBeGreaterThan(0);
+        });
+    });
+});
+
+describe('applyDiscount', () => {
+    it('should apply 10% if customer has more than 10 points', () => {
+        db.getCustomerSync = function(customerID) {
+            console.log('Fake reading customer...');
+            return {id: customerID, points: 20};
+        }
+
+        const order = {customerID: 1, totalPrice: 10};
+        lib.applyDiscount(order);
+        expect(order.totalPrice).toBe(9);
+    });
+});
+
+describe('notifyCustomer', () => {
+    it('should send an email to the customer', () => {
+        db.getCustomerSync = function(customerId) {
+            return {email: 'a'};
+        }
+        
+        let mailSent = false;
+        mail.send = function(email, message){
+            mailSent = true;
+        }
+
+        lib.notifyCustomer({customerID: 1});
+        expect(mailSent).toBe(true);
     });
 });
